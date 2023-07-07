@@ -1,11 +1,14 @@
+import json
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import path
-from EventORG.services.notificationService import getLatestNotifications, createNotification
-import json
+from .services.notificationService import getLatestNotifications, createNotification
+from .services import user_service
 from datetime import date
 from .models.Notificaton import Notification 
 from django.views.decorators.csrf import csrf_exempt
+from django.views import View
+from django.utils.decorators import method_decorator
 
 # this is a dic. containing sample data
 events = {
@@ -68,8 +71,28 @@ def notifications_view(request):
         return JsonResponse({'error': 'Invalid request method'})
                 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class user_view(View):
+    def post(self, request):
+        try:
+            json_data = json.loads(request.body)
+            print(json_data)
+            res = user_service.create_new_user(json_data)
+            if res:
+                return JsonResponse({'message': 'user Entry created successfully'})
+            else:
+                return JsonResponse({'message': 'user already exists'})
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'something went wrong'})
 
-
-
-
-
+    def put(self, request):
+        try:
+            json_data = json.loads(request.body)
+            print(json_data)
+            res = user_service.create_new_address(json_data)
+            if res == True :
+                return JsonResponse({"message": "address entry created"})
+            elif res == False:
+                return JsonResponse({"message": "user address updated"})
+        except json.JSONDecodeError:
+            return JsonResponse({"erro": "something went wrong"})
